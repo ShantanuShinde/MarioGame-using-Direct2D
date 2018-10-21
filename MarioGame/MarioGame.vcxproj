@@ -77,6 +77,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;d2d1.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -115,6 +118,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="GameController.cpp" />
+    <ClCompile Include="GameLevel.cpp" />
+    <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Ground.cpp" />
+    <ClCompile Include="HPTimer.cpp" />
+    <ClCompile Include="Level1.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="ScoreBlock.cpp" />
+    <ClCompile Include="SpriteSheet.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="GameController.h" />
+    <ClInclude Include="GameLevel.h" />
+    <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Ground.h" />
+    <ClInclude Include="HPTimer.h" />
+    <ClInclude Include="Level1.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="ScoreBlock.h" />
+    <ClInclude Include="SpriteSheet.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="enemy.png" />
+    <Image Include="Ground.png" />
+    <Image Include="Image.png" />
+    <Image Include="jump.png" />
+    <Image Include="scoreblock.png" />
+    <Image Include="stand.png" />
+    <Image Include="walk.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
