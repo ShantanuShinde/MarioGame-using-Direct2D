@@ -7,6 +7,7 @@ Enemy::Enemy(Graphics* gfx)
 	sprite = new SpriteSheet(L"enemy.png", gfx,32,32);
 	frame = 0;
 	direction = 1;
+	Dead = false;
 }
 
 void Enemy::Init(float x, float y)
@@ -21,6 +22,9 @@ void Enemy::Move(double timeDelta,float ySpeed)
 	meshRect.top += ySpeed;
 	meshRect.bottom += ySpeed;
 	HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
+	std::ostringstream os;
+	os << ySpeed << "\n";
+	OutputDebugString(os.str().c_str());
 }
 void Enemy::UpdateMove(double timeDelta,D2D1_RECT_F gmsh,float *ySpeed)
 {
@@ -40,22 +44,29 @@ void Enemy::UpdateMove(double timeDelta,D2D1_RECT_F gmsh,float *ySpeed)
 	
 	HRESULT hr  = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
 }
-bool Enemy::PlayerCollision(D2D1_RECT_F plmsh)
+void Enemy::PlayerCollision(Player **p,float &yPlayerSpeed)
 {
 	ID2D1RectangleGeometry* pGeom;
+	D2D1_RECT_F plmsh = (*p)->GetCollisionMesh();
 	HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(plmsh, &pGeom);
 	D2D1_GEOMETRY_RELATION relation;
 	hr = pGeom->CompareWithGeometry(meshGeom, D2D1::IdentityMatrix(), &relation);
 	if (relation == D2D1_GEOMETRY_RELATION_OVERLAP)
 	{
 		if (plmsh.bottom >= meshRect.top&&plmsh.top < meshRect.top)
-			return true;
+		{
+			Dead = true;
+			delete sprite;
+			(*p)->UpdateScore(200);
 			
+		}
+		else if ((plmsh.right >= meshRect.left&&plmsh.left < meshRect.left) || (plmsh.left <= meshRect.right&&plmsh.right > meshRect.right))
+			(*p)->Die(yPlayerSpeed);
 	}
-	return false;
 }
 void Enemy::Display()
 {
+
 	frame++;
 	sprite->Draw((frame/10)%2, meshRect);
 }
