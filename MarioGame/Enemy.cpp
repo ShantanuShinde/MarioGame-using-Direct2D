@@ -8,6 +8,7 @@ Enemy::Enemy(Graphics* gfx)
 	frame = 0;
 	direction = 1;
 	Dead = false;
+	deadFrames = 0;
 }
 
 void Enemy::Init(float x, float y)
@@ -22,9 +23,6 @@ void Enemy::Move(double timeDelta,float ySpeed)
 	meshRect.top += ySpeed;
 	meshRect.bottom += ySpeed;
 	HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
-	std::ostringstream os;
-	os << ySpeed << "\n";
-	OutputDebugString(os.str().c_str());
 }
 void Enemy::UpdateMove(double timeDelta,D2D1_RECT_F gmsh,float *ySpeed)
 {
@@ -56,19 +54,26 @@ void Enemy::PlayerCollision(Player **p,float &yPlayerSpeed)
 		if (plmsh.bottom >= meshRect.top&&plmsh.top < meshRect.top)
 		{
 			Dead = true;
-			delete sprite;
 			(*p)->UpdateScore(200);
-			
+			(*p)->ChangeY(-3.5f);
 		}
 		else if ((plmsh.right >= meshRect.left&&plmsh.left < meshRect.left) || (plmsh.left <= meshRect.right&&plmsh.right > meshRect.right))
-			(*p)->Die(yPlayerSpeed);
+			(*p)->Die();//yPlayerSpeed);
 	}
 }
 void Enemy::Display()
 {
-
-	frame++;
-	sprite->Draw((frame/10)%2, meshRect);
+		
+	if (deadFrames < 10 && Dead)
+	{
+		sprite = new SpriteSheet(L"enemy_dead.png", gfx, 32, 32);
+		frame = 0;
+		deadFrames++;
+	}
+	else
+		frame++;
+	if(!Dead || deadFrames<10)
+		sprite->Draw((frame/10)%2, meshRect);
 }
 
 Enemy::~Enemy()
