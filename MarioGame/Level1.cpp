@@ -1,198 +1,130 @@
 #include "Level1.h"
+#include "GameController.h"
 #include "SpriteSheet.h"
 #include<sstream>
 
 void Level1::Load()
 {
+	
 	//initialize values
-	xPlayer = 100;
-	yPlayer =   50,dx=0;
-	p = new Player(gfx,xPlayer,yPlayer);
-	dx = dy = 0;
-	index = 0;
-	frame = 0;
+	p = new Player(gfx,60,125);
 	ySpeed = 0;
-	ySpeedPlayer = 0;
 	gravity = 10;
-	walkingBack =walkingForward= false,onGround=false,jumpFoward=jumpBack=false;
-	scrollX = 0;
-	sb = new ScoreBlock(gfx);
-	sb->Init(70, 50, 15, 15,L"scoreblock.png",32,32);
-	for (int i = 0; i < 3; i++)
+
+	for (int i = 0; i < 20; i++)
+	{
+		sb[i] = new ScoreBlock(gfx);
+		e[i] = new Enemy(gfx);
+	}
+	for (int i = 0; i < 50; i++)
+	{
 		g[i] = new Ground(gfx);
-	g[0]->Init(0, 100, 60, 1000,L"Ground.png",236,68);
-	g[1]->Init(40, 50, 15, 15, L"Ground.png", 236, 68); g[2]->Init(415, 65, 35, 15, L"Ground.png", 236, 68);
-	//sprite = new SpriteSheet(L"Image.png", gfx);
-	e = new Enemy(gfx);
-	e->Init(30, 50);
+		g[i]->Init(i*15, 125, 15, 15, L"Ground.png", 32, 32);
+	}
+	for (int i = 50; i < 80; i++)
+	{
+		g[i] = new Ground(gfx);
+		g[i]->Init(45 + i * 15, 125, 15, 15, L"Ground.png", 32, 32);
+	}
+	for (int i = 80; i < 150; i++)
+	{
+		g[i] = new Ground(gfx);
+		g[i]->Init(90+ i * 15, 125, 15, 15, L"Ground.png", 32, 32);
+	}
+	for (int i = 0; i < 200; i++)
+		g1[i] = new Ground(gfx);
+	//first row 
+	g1[0]->Init(100, 75, 15, 15, L"Bricks.png", 32, 32); g1[1]->Init(115, 75, 15, 15, L"Bricks.png", 32, 32); sb[0]->Init(130, 75, 15, 15, L"scoreblock.png", 32, 32); g1[2]->Init(145, 75, 15, 15, L"Bricks.png", 32, 32);
+	//first enemy
+	e[0]->Init(200, 125);
+	//second row of bricks
+	g1[3]->Init(250, 75, 15, 15, L"Bricks.png", 32, 32), sb[1]->Init(265, 75, 15, 15, L"scoreblock.png", 32, 32), g1[4]->Init(280, 75, 15, 15, L"Bricks.png", 32, 32); g1[5]->Init(295, 75, 15, 15, L"Bricks.png", 32, 32);
+	//row above second
+	g1[6]->Init(280, 40, 15, 15, L"Bricks.png", 32, 32); g1[7]->Init(295, 40, 15, 15, L"Bricks.png", 32, 32); g1[8]->Init(310, 40, 15, 15, L"Bricks.png", 32, 32); g1[9]->Init(325, 40, 15, 15, L"Bricks.png", 32, 32);
+	
+	e[0]->Init(200, 125), e[1]->Init(290, 40), e[2]->Init(300, 40);
+
 }
 
 void Level1::Unload()
 {
-	delete p;
+	/*delete p;
+	delete g;
+	delete sb;
+	//delete e;*/
 }
 
 void Level1::Update(double timeTotal, double timeDelta)
 {
-	onGround = false;
-	float nextYPlayer = yPlayer;
-	nextYPlayer += ySpeedPlayer;//update possible y position of player with speed
+
+	std::ostringstream os;
+
 	ySpeed += gravity * timeDelta;//update player speed with gravity*tome delta
-	ySpeedPlayer += gravity * timeDelta;
-	if (!e->isDead())
-		e->Move(timeDelta,ySpeed);
-	D2D1_RECT_F pBound = p->GetBoundBox();//get the bounding box
-	if(!p->isDead())
+/*	if (!e->isDead())
+		e->Move(timeDelta, ySpeed);*/
+
+	p->Move(gravity, timeDelta);
+	D2D1_RECT_F bbox = p->GetBoundBox();
 	for (int i = 0; i < 3; i++)
 	{
-		//for each enviroment object, check if it falls inside the players bounding box. If yes, check if player is colliding with it
-		D2D1_RECT_F gmsh = g[i]->GetMesh();
-		D2D1_RECT_F plmsh = D2D1::RectF(xPlayer+dx - 11, nextYPlayer - 15, xPlayer+dx, nextYPlayer);
-		
-		if ((gmsh.left <= pBound.left && gmsh.right >= pBound.right)||(gmsh.right<=pBound.right&&gmsh.right>=pBound.left))
-		{
-
-			if (g[i]->DetectCollision(plmsh))
-			{
-				
-				if ((plmsh.bottom >= gmsh.top) && (plmsh.top < gmsh.top) && (plmsh.bottom < gmsh.bottom) && (plmsh.right > gmsh.left) && (plmsh.left < gmsh.right))//handle collision from top
-				{
-					nextYPlayer = gmsh.top;
-					ySpeedPlayer = 0;
-					onGround = true;
-					
-
-				}
-				else if ((plmsh.top <= gmsh.bottom) && (plmsh.bottom > gmsh.top) && (plmsh.bottom > gmsh.bottom) && (plmsh.right > gmsh.left) && (plmsh.left < gmsh.right))//handle collision from bottom
-				{
-					nextYPlayer = gmsh.bottom + 15;
-					ySpeedPlayer = 0.5;
-					g[i]->MoveUp();
-				}
-				else if (plmsh.right >= gmsh.left&&plmsh.left < gmsh.left)//handle collision from left
-					xPlayer = gmsh.left;
-				else if (plmsh.left <= gmsh.right)//handle collision from right
-					xPlayer = gmsh.right + 11;
-
-			}
-		}
-		
+		D2D1_RECT_F emsh = e[i]->GetRect();
+		e[i]->PlayerCollision(&p, ySpeed);
+		if (bbox.right > emsh.left&&bbox.left < emsh.right)
+			e[i]->Move(timeDelta, ySpeed);
 	}
-	for (int i = 0; i < 3; i++)
+	if(!p->isDead())
+	for (int i = 0; i < 150; i++)
+	{
+		p->CheckGroundAndWallCollision(g[i]);
+		for (int j = 0; j < 3; j++)
+		{
+			if (g[i]->DetectCollision(e[j]->GetMesh()))
+				e[j]->UpdateMove(timeDelta, g[i]->GetMesh(), &ySpeed);
+		}
+	}
+	
+	
+	
+	/*if (p->GetBoundBox().bottom <= p->GetCollisionMesh().top)
+	{
+		OutputDebugString("Load level\n");
+		GameController::ReloadonPlayerDead();
+	}*/
+	/*for (int i = 0; i < 150; i++)
 	{
 		D2D1_RECT_F gmsh = g[i]->GetMesh();
 		D2D1_RECT_F emsh = e->GetRect();
 		if (!e->isDead())
 			if (g[i]->DetectCollision(emsh))
 				e->UpdateMove(timeDelta, gmsh, &ySpeed);
-	}
-	yPlayer = nextYPlayer; //update player's vertical position with its possible vertical position
-	xPlayer += dx;
-	D2D1_RECT_F plmsh = D2D1::RectF(xPlayer - 11, nextYPlayer - 15, xPlayer, nextYPlayer);
-	D2D1_RECT_F	sbmsh = sb->GetMesh();
-	if ((sbmsh.left <= pBound.left && sbmsh.right >= pBound.right) || (sbmsh.right <= pBound.right&&sbmsh.right >= pBound.left))
+	}*/
+	for(int i=0;i<2;i++)
+		p->CheckScoreBlockCollision(sb[i]);
+	for (int i = 0; i < 10; i++)
 	{
-
-		if (sb->DetectCollision(plmsh))
+		p->CheckGroundAndWallCollision(g1[i]);
+		for (int j = 0; j < 3; j++)
 		{
-			if ((plmsh.bottom <= sbmsh.top) && (plmsh.top < sbmsh.top) && (plmsh.bottom < sbmsh.bottom) && (plmsh.right > sbmsh.left) && (plmsh.left < sbmsh.right))//handle collision from top
-			{
-				nextYPlayer = sbmsh.top;
-				ySpeedPlayer = 0;
-					
-				onGround = true;
+			if (g1[i]->DetectCollision(e[j]->GetMesh()))
 			
-			}
-			else if ((plmsh.top <= sbmsh.bottom) && (plmsh.bottom > sbmsh.top) && (plmsh.bottom > sbmsh.bottom) && (plmsh.right > sbmsh.left) && (plmsh.left < sbmsh.right))//handle collision from bottom
-			{
-				nextYPlayer = sbmsh.bottom + 15;
-				ySpeedPlayer = 0.5;
-				sb->CollectPoint(&p);
-			}
-			else if (plmsh.right >= sbmsh.left&&plmsh.left < sbmsh.left)//handle collision from left
-			{
-				xPlayer = sbmsh.left;
-				
-			}
-			else if (plmsh.left <= sbmsh.right)//handle collision from right
-			{
-				xPlayer = sbmsh.right + 11;
-			}
-
+				e[j]->UpdateMove(timeDelta, g1[i]->GetMesh(), &ySpeed);
 		}
 	}
-	if (!e->isDead()&&!p->isDead())
-		e->PlayerCollision(&p,ySpeedPlayer);
-
-	if (xPlayer >= (p->GetBoundMidPoint() - 10))//check if player is near centre of the screen, if yes move the screen to right
-	{
-		scrollX -= 1;
-		p->UpdateBoundBox(1);
-		gfx->Scroll(scrollX);
-	}
-
-	
-	
-	if (!p->isDead())
-	{
-		//handle player controls
-		if (GetAsyncKeyState('D'))
-		{
-			if (!walkingForward)
-				frame = 0;
-			walkingForward = true;
-			frame++;
-			index = (frame / 5) % 3;
-			dx = 79.0f*timeDelta;
-		}
-		else if (walkingForward)
-		{
-			walkingForward = false;
-			index = 0;
-			dx = 0;
-		}
-
-		if (GetAsyncKeyState('A'))
-		{
-			if (!walkingBack)
-				frame = 0;
-			walkingBack = true;
-			frame++;
-			index = (frame / 5) % 3;
-			int temp = xPlayer;
-			dx = -79.0f*timeDelta;
-			std::ostringstream os;
-			os << temp - xPlayer << "\n";
-			OutputDebugString(os.str().c_str());
-		}
-		else if (walkingBack)
-		{
-			walkingBack = false;
-			index = 1;
-			dx = 0;
-		}
-		if (GetAsyncKeyState('W') && onGround)
-		{
-			ySpeedPlayer = -3.5f;
-			if (walkingBack)
-				jumpBack = true;
-			else if (walkingForward)
-				jumpFoward = true;
-		}
-		else if (onGround)
-			jumpBack = jumpFoward = false;
-	}
+	/*if (!e->isDead()&&!p->isDead())
+		e->PlayerCollision(&p,ySpeedPlayer);*/
 	
 }
 
 void Level1::Render()
 {
 	gfx->ClearScreen(135.0/255, 206.0/255, 250.0/255);
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 150; i++)
 		g[i]->Display();
-	if (!e->isDead())
-		e->Display();
-	
-	p->Display(index, xPlayer+2, yPlayer,walkingForward,walkingBack,jumpFoward,jumpBack);
-	sb->Display();
+	for (int i = 0; i < 3; i++)
+		e[i]->Display();
+	p->Display();
+	for (int i = 0; i < 2; i++)
+		sb[i]->Display();
+	for (int i = 0; i < 10; i++)
+		g1[i]->Display();
 }

@@ -24,7 +24,7 @@ void GameController::SwitchLevel(GameLevel* lvl)
 	loading = true;
 	currentLevel->Unload();
 	lvl->Load();
-	delete currentLevel;
+	//delete currentLevel;
 	currentLevel = lvl;
 	loading = false;
 }
@@ -42,4 +42,11 @@ void GameController::Render()
 	if (loading)
 		return;
 	currentLevel->Render();
+}
+
+void GameController::ReloadonPlayerDead()
+{
+	
+	Player::DecreaseLife();
+	SwitchLevel(new Level1);
 }

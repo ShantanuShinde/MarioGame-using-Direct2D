@@ -1,6 +1,8 @@
 #pragma once
 #include "HPTimer.h"
 #include "GameLevel.h"
+#include "Player.h"
+#include "Level1.h"
 
 class GameController
 {
@@ -17,6 +19,7 @@ public:
 	static void Update();
 	static void Render();
 
+	static void ReloadonPlayerDead();
 };
 
 
