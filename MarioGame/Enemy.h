@@ -12,11 +12,12 @@ class Enemy
 	int frame,direction;
 	D2D1_RECT_F meshRect;
 	ID2D1RectangleGeometry* meshGeom;
-	bool Dead;
+	bool Dead,OnGround;
 	int deadFrames;
 public:
 	Enemy(Graphics *graphics);
 	void Display();
+	D2D1_RECT_F GetMesh() { return meshRect; }
 	void Move(double timeDelta,float ySpeed); //move goomba
 	void UpdateMove(double timeDelta,D2D1_RECT_F gmsh,float *ySpeed); //check collisions
 	D2D1_RECT_F GetRect() { return meshRect; }

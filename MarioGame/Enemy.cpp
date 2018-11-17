@@ -6,9 +6,10 @@ Enemy::Enemy(Graphics* gfx)
 	this->gfx = gfx;
 	sprite = new SpriteSheet(L"enemy.png", gfx,32,32);
 	frame = 0;
-	direction = 1;
+	direction = -1;
 	Dead = false;
 	deadFrames = 0;
+	OnGround = false;
 }
 
 void Enemy::Init(float x, float y)
@@ -18,47 +19,61 @@ void Enemy::Init(float x, float y)
 }
 void Enemy::Move(double timeDelta,float ySpeed)
 {
-	meshRect.left += float(direction*30.0f)*timeDelta;
-	meshRect.right += float(direction*30.0f)*timeDelta;
-	meshRect.top += ySpeed;
-	meshRect.bottom += ySpeed;
-	HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
+	if (!Dead)
+	{
+		if (OnGround)
+		{
+			meshRect.left += float(direction*30.0f)*timeDelta;
+			meshRect.right += float(direction*30.0f)*timeDelta;
+		}
+		meshRect.top += ySpeed*5;
+		meshRect.bottom += ySpeed*5;
+		HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
+		OnGround = false;
+	}
 }
 void Enemy::UpdateMove(double timeDelta,D2D1_RECT_F gmsh,float *ySpeed)
 {
-	if (meshRect.bottom>=gmsh.top&&meshRect.bottom<gmsh.bottom&&meshRect.top<gmsh.top)
+	if (!Dead)
 	{
-		meshRect.bottom =gmsh.top;
-		meshRect.top =gmsh.top-15;
-		
-		*ySpeed = 0;
+		if (meshRect.bottom >= gmsh.top&&meshRect.bottom < gmsh.bottom&&meshRect.top < gmsh.top)
+		{
+			meshRect.bottom = gmsh.top;
+			meshRect.top = gmsh.top - 15;
+			OnGround = true;
+			*ySpeed = 0;
+		}
+		else
+		{
+			direction *= -1;
+			meshRect.left += float(direction*30.0f)*timeDelta;
+			meshRect.right += float(direction*30.0f)*timeDelta;
+		}
+
+		HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
 	}
-	else
-	{
-		direction *= -1;
-		meshRect.left += float(direction*30.0f)*timeDelta;
-		meshRect.right += float(direction*30.0f)*timeDelta;
-	}
-	
-	HRESULT hr  = gfx->GetFactory()->CreateRectangleGeometry(meshRect, &meshGeom);
 }
 void Enemy::PlayerCollision(Player **p,float &yPlayerSpeed)
 {
-	ID2D1RectangleGeometry* pGeom;
-	D2D1_RECT_F plmsh = (*p)->GetCollisionMesh();
-	HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(plmsh, &pGeom);
-	D2D1_GEOMETRY_RELATION relation;
-	hr = pGeom->CompareWithGeometry(meshGeom, D2D1::IdentityMatrix(), &relation);
-	if (relation == D2D1_GEOMETRY_RELATION_OVERLAP)
+	if (!Dead)
 	{
-		if (plmsh.bottom >= meshRect.top&&plmsh.top < meshRect.top)
+		ID2D1RectangleGeometry* pGeom;
+		D2D1_RECT_F plmsh = (*p)->GetCollisionMesh();
+		HRESULT hr = gfx->GetFactory()->CreateRectangleGeometry(plmsh, &pGeom);
+		D2D1_GEOMETRY_RELATION relation;
+		hr = pGeom->CompareWithGeometry(meshGeom, D2D1::IdentityMatrix(), &relation);
+		if (relation == D2D1_GEOMETRY_RELATION_OVERLAP)
 		{
-			Dead = true;
-			(*p)->UpdateScore(200);
-			(*p)->ChangeY(-3.5f);
+			if (plmsh.bottom >= meshRect.top&&plmsh.top < meshRect.top&&plmsh.right>meshRect.left&&plmsh.left<meshRect.right
+				)
+			{
+				Dead = true;
+				(*p)->UpdateScore(200);
+				(*p)->ChangeY(-3.5f);
+			}
+			else if ((plmsh.right >= meshRect.left&&plmsh.left < meshRect.left) || (plmsh.left <= meshRect.right&&plmsh.right > meshRect.right))
+				(*p)->Die();//yPlayerSpeed);
 		}
-		else if ((plmsh.right >= meshRect.left&&plmsh.left < meshRect.left) || (plmsh.left <= meshRect.right&&plmsh.right > meshRect.right))
-			(*p)->Die();//yPlayerSpeed);
 	}
 }
 void Enemy::Display()
